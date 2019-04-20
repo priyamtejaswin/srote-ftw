@@ -8,8 +8,12 @@
 └── src_tf2 ## Code in tf2_alpha.
 ```
 
+## Dependencies
+- `src_tensorflow` uses **tensorflow 1.13.1**. This is the latest stable release as of creating this repository.
+- `src_tf2` uses **tensorflow 2.0** which is still an alpha build.
+
 ## System Design
-![](system_blocks.png)
+![](system_blocks.jpg)
 
 ## References
 - VESPCN implementation (unofficial, TF) - <https://github.com/LoSealL/VideoSuperResolution/blob/master/VSR/Models/Vespcn.py>
