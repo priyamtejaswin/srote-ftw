@@ -1,5 +1,7 @@
 # Super Resolution, On The Edge, For The Win!
 *by Akshay Chawla and Priyam Tejaswin*
+
+Main reference paper : [Real-Time Video Super-Resolution with Spatio-Temporal Networks and Motion Compensation, CVPR 2017](http://openaccess.thecvf.com/content_cvpr_2017/papers/Caballero_Real-Time_Video_Super-Resolution_CVPR_2017_paper.pdf)
 ```
 .
 ├── README.md
