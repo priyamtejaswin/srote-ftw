@@ -8,7 +8,7 @@ x = np.random.randn(4,4)
 y = np.zeros_like(x) 
 y[:, 1:] += x[:, :3]
 flow = np.zeros(shape=(1,4,4,2))
-flow[0,:,:,0] += 1
+flow[0,:,:,1] += 1
 x = np.expand_dims(x, axis=0)
 x = np.expand_dims(x, axis=3)
 y = np.expand_dims(y, axis=0)
@@ -21,6 +21,10 @@ _y = tf.contrib.image.dense_image_warp(x, flow)
 _y = _y.numpy()
 
 print(_y.shape)
+
+# checking if my intution for warping is correct 
+same = np.allclose(_y[0,:,1:,0], y[0,:,1:,0])
+print("Intuition correct? {}".format(same))
 
 import ipdb; ipdb.set_trace()
 
