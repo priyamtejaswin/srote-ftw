@@ -23,8 +23,10 @@ files = os.listdir(args.videos)
 os.makedirs(args.outdir)
 
 for fname in tqdm(files):
-    fpath = os.path.join(args.videos, fname)
-    wpath = os.path.join(args.outdir, fname)
+    vdir = os.path.join(args.outdir, fname) ## Folder for that video's frames.
+    os.makedirs(vdir)
+    fpath = os.path.join(args.videos, fname) ## Vid file source.
+    wpath = os.path.join(vdir, fname)
     cmd = "ffmpeg -i {} {}___%d.png".format(fpath, wpath)
     os.system(cmd)
 
