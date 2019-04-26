@@ -21,12 +21,25 @@ BATCHSIZE = 64
 
 
 def _fskey(f):
+    """
+    Generate sorting key from a frame file name.
+
+    :param f: VideoName___FrameId.png
+    :return: (VideoName, int(FrameId))
+    """
     vname, fid = f.rstrip('.png').split(VFDEL)
     fid = int(fid)
     return vname, fid
 
 
 def load_fnames(fdir):
+    """
+    Load all frame names from every video directory.
+    Group frames by NFRAMES param.
+
+    :param fdir: Root directory, with all video directories, each containing video frames.
+    :return: List of grouped frames.
+    """
     all_frames = []
 
     vdirs = [os.path.join(fdir, d) for d in os.listdir(fdir)]
@@ -54,6 +67,12 @@ def load_fnames(fdir):
 
 
 def load_image(fpath):
+    """
+    Read an image. Convert to tf.float32 ==> THIS IS IMPORTANT!!
+
+    :param fpath: Path to frame image file.
+    :return: Decoded image. (HEIGHT, WIDTH, CHANNEL)
+    """
     image_string = tf.read_file(fpath)
     image = tf.image.decode_png(image_string, channels=3)
     image = tf.image.convert_image_dtype(image, tf.float32)
@@ -61,6 +80,16 @@ def load_image(fpath):
 
 
 def make_patches(image):
+    """
+    Extract patches from a grouped Tensor (NFRAMES, HEIGHT, WIDTH, CHANNELS).
+    ==> Reshape patches to Tensor (NFRAMES, NUM_PATCHES, KERNEL, KERNEL, CHANNELS).
+    ==> Swap axes -- aka numpy.transpose (NUM_PATCHES, NFRAMES, KERNEL, KERNEL, CHANNELS).
+    This brings NUM_PATCHES outside.
+    Check the README to understand how this works.
+
+    :param image: Grouped Tensor (NFRAMES, HEIGHT, WIDTH, CHANNELS).
+    :return: Patches Tensor (NUM_PATCHES, NFRAMES, KERNEL, KERNEL, CHANNELS).
+    """
     channels = tf.shape(image)[-1]
     patches = tf.image.extract_image_patches(
         image,
@@ -81,6 +110,12 @@ def make_patches(image):
 
 
 def make_xy(patches):
+    """
+    Downscale input and return (x, y) pairs.
+
+    :param patches: Original high-res image.
+    :return: Downsampled image. Kernel is default (BiLinear??)
+    """
     downed = tf.image.resize_images(patches, [DOWNK, DOWNK])
     return downed, patches
 
