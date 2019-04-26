@@ -10,14 +10,20 @@ import os
 import sys
 
 
-VFDEL = '___' ## VideoName___FrameId delimiter.
-NFRAMES = 2 ## Number of frames considered per sample.
+VFDEL = '___' ## VideoName___FrameId.png delimiter.
+NFRAMES = 2 ## Number of consecutive frames considered per sample.
+
+KERNEL = 192 ## Patch height and width.
+STRIDE = 14 ## Stride while taking patches.
+DOWNK = 96 ## Downscaled height and width.
+BATCHSIZE = 64
 
 
 def _fskey(f):
     vname, fid = f.rstrip('.png').split(VFDEL)
     fid = int(fid)
     return vname, fid
+
 
 def load_fnames(fdir):
     all_frames = []
