@@ -8,6 +8,7 @@ Utility functions. Data, io, processing, etc.
 
 import os
 import sys
+import tensorflow as tf
 
 
 VFDEL = '___' ## VideoName___FrameId.png delimiter.
@@ -50,6 +51,38 @@ def load_fnames(fdir):
 
     print "Found %d frame groups of length %d."%(len(all_frames), NFRAMES)
     return all_frames
+
+
+def load_image(fpath):
+    image_string = tf.read_file(fpath)
+    image = tf.image.decode_png(image_string, channels=3)
+    image = tf.image.convert_image_dtype(image, tf.float32)
+    return image
+
+
+def make_patches(image):
+    channels = tf.shape(image)[-1]
+    patches = tf.image.extract_image_patches(
+        image,
+        ksizes=[1, KERNEL, KERNEL, 1],
+        strides=[1, STRIDE, STRIDE, 1],
+        rates=[1, 1, 1, 1],
+        padding='VALID'
+    )
+    patches = tf.squeeze(patches)
+
+    shape = tf.shape(patches)  ## [frames, patches_x, patches_y, `channels`]
+
+    patches = tf.reshape(patches, [NFRAMES, shape[1], shape[2], KERNEL, KERNEL, channels])
+    patches = tf.reshape(patches, [NFRAMES, shape[1] * shape[2], KERNEL, KERNEL, channels])
+
+    patches = tf.transpose(patches, [1, 0, 2, 3, 4])
+    return patches
+
+
+def make_xy(patches):
+    downed = tf.image.resize_images(patches, [DOWNK, DOWNK])
+    return downed, patches
 
 
 if __name__ == '__main__':
