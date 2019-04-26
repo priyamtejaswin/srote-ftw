@@ -120,6 +120,38 @@ def make_xy(patches):
     return downed, patches
 
 
+def build_dataset(batched_fnames):
+    """
+    Build tf.data.Dataset from grouped frame paths.
+
+    :param batched_fnames: List of frames, grouped by NFRAMES.
+    :return: Proper tf.data.Dataset object.
+    """
+    dataset = tf.data.Dataset.from_tensor_slices(batched_fnames[:4])  ## Paired frames.
+    dataset = dataset.shuffle(buffer_size=len(batched_fnames))  ## Paired frames are shuffled.
+
+    ## Flatten everything | Order will be preserved in map and flat_map.
+    ## https://stackoverflow.com/questions/49960875 -- flatten
+    ## https://stackoverflow.com/questions/51015918 -- order
+    dataset = dataset.flat_map(tf.data.Dataset.from_tensor_slices)
+    dataset = dataset.map(load_image)  ## Single frame images loaded.
+
+    dataset = dataset.window(size=NFRAMES, drop_remainder=True)  ## Window consecutive frames.
+    dataset = dataset.flat_map(lambda dset: dset.batch(NFRAMES))  ## Group the frames | Loaded frames are paired again.
+
+    dataset = dataset.map(
+        make_patches)  ## Generate patches for paired frames AND swap axes : [patches, NFRAMES, k, k, c]
+
+    dataset = dataset.flat_map(tf.data.Dataset.from_tensor_slices)  ## Flatten | single tensors of [NFRAMES, k, k, c]
+
+    dataset = dataset.shuffle(buffer_size= BATCHSIZE*3)  ## After single tensors and BEFORE (x,y) generation.
+
+    dataset = dataset.map(make_xy)  ## Return (X,Y): (Downscaled, Original)
+
+    dataset = dataset.batch(BATCHSIZE)  ## Final batching.
+    return dataset
+
+
 if __name__ == '__main__':
     dirpath = sys.argv[1]
     load_fnames(dirpath)
