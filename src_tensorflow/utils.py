@@ -127,7 +127,7 @@ def build_dataset(batched_fnames):
     :param batched_fnames: List of frames, grouped by NFRAMES.
     :return: Proper tf.data.Dataset object.
     """
-    dataset = tf.data.Dataset.from_tensor_slices(batched_fnames[:4])  ## Paired frames.
+    dataset = tf.data.Dataset.from_tensor_slices(batched_fnames)  ## Paired frames.
     dataset = dataset.shuffle(buffer_size=len(batched_fnames))  ## Paired frames are shuffled.
 
     ## Flatten everything | Order will be preserved in map and flat_map.
@@ -153,5 +153,10 @@ def build_dataset(batched_fnames):
 
 
 if __name__ == '__main__':
+    tf.enable_eager_execution()
+    print "Executing Eagerly?", tf.executing_eagerly()
+
     dirpath = sys.argv[1]
-    load_fnames(dirpath)
+    fnames = load_fnames(dirpath)
+    for x, y in build_dataset(fnames[:5]):
+        print x.shape, y.shape
