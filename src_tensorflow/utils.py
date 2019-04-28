@@ -117,6 +117,9 @@ def make_xy(patches):
     :return: Downsampled image. Kernel is default (BiLinear??)
     """
     downed = tf.image.resize_images(patches, [DOWNK, DOWNK])
+
+    paddings = tf.constant([[0, 0], [1, 1], [1, 1], [0, 0]])
+    downed = tf.pad(downed, paddings=paddings)
     return downed, patches[0] # Error against single HiRes frames only.
 
 
