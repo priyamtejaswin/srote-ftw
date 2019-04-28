@@ -14,7 +14,7 @@ import tensorflow as tf
 keras = tf.keras
 from keras.layers import TimeDistributed
 from keras.layers import Conv2D
-from keras.activations import  relu
+from keras.activations import linear
 from keras.layers import Layer
 
 
@@ -46,9 +46,11 @@ class EarlyFusion(Layer):
     """
     A wrapper over TimeDistributed layer for Early Fusion.
     Returns a TimeDistributed Conv2d layer you can add to the model.
+
+    <https://www.tensorflow.org/tutorials/eager/custom_layers#implementing_custom_layers>
     """
     def __init__(self, timeframes, iheight, iwidth, channels=3,
-                nfilters=None, ksize=3, activation=relu):
+                nfilters=None, ksize=3, activation=linear):
         """
         :param timeframes: Number of timesteps/frames; the first index AFTER batch.
         :param iheight: Height of frame.
@@ -60,6 +62,9 @@ class EarlyFusion(Layer):
         :return: A TimeDistributed Conv2d layer you can add to the model.
         """
         super(EarlyFusion, self).__init__()
+
+        if nfilters is None:
+            nfilters = 24 // timeframes
 
         self.convTd = TimeDistributed(
             Conv2D(nfilters, ksize, activation=activation),
