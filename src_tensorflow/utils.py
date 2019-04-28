@@ -11,12 +11,12 @@ import sys
 import tensorflow as tf
 
 
-VFDEL = '___' ## VideoName___FrameId.png delimiter.
-NFRAMES = 2 ## Number of consecutive frames considered per sample.
+VFDEL = '___' # VideoName___FrameId.png delimiter.
+NFRAMES = 2 # Number of consecutive frames considered per sample.
 
-KERNEL = 192 ## Patch height and width.
-STRIDE = 14 ## Stride while taking patches.
-DOWNK = 96 ## Downscaled height and width.
+KERNEL = 192 # Patch height and width.
+STRIDE = 14 # Stride while taking patches.
+DOWNK = 96 # Downscaled height and width.
 BATCHSIZE = 64
 
 
@@ -54,12 +54,12 @@ def load_fnames(fdir):
         frames = sorted(frames, key=lambda x:_fskey(x))
         frames = [os.path.join(dpath, f) for f in frames]
 
-        ## Group sorted frames by NFRAMES.
+        # Group sorted frames by NFRAMES.
         motion_frames = []
         for i in range(len(frames) - NFRAMES + 1):
             motion_frames.append(tuple(frames[i : i+NFRAMES]))
 
-        ## Add to master list.
+        # Add to master list.
         all_frames.extend(motion_frames)
 
     print "Found %d frame groups of length %d."%(len(all_frames), NFRAMES)
@@ -100,7 +100,7 @@ def make_patches(image):
     )
     patches = tf.squeeze(patches)
 
-    shape = tf.shape(patches)  ## [frames, patches_x, patches_y, `channels`]
+    shape = tf.shape(patches)  # [frames, patches_x, patches_y, `channels`]
 
     patches = tf.reshape(patches, [NFRAMES, shape[1], shape[2], KERNEL, KERNEL, channels])
     patches = tf.reshape(patches, [NFRAMES, shape[1] * shape[2], KERNEL, KERNEL, channels])
@@ -117,7 +117,7 @@ def make_xy(patches):
     :return: Downsampled image. Kernel is default (BiLinear??)
     """
     downed = tf.image.resize_images(patches, [DOWNK, DOWNK])
-    return downed, patches
+    return downed, patches[0] # Error against single HiRes frames only.
 
 
 def build_dataset(batched_fnames):
@@ -127,28 +127,28 @@ def build_dataset(batched_fnames):
     :param batched_fnames: List of frames, grouped by NFRAMES.
     :return: Proper tf.data.Dataset object.
     """
-    dataset = tf.data.Dataset.from_tensor_slices(batched_fnames)  ## Paired frames.
-    dataset = dataset.shuffle(buffer_size=len(batched_fnames))  ## Paired frames are shuffled.
+    dataset = tf.data.Dataset.from_tensor_slices(batched_fnames)  # Paired frames.
+    dataset = dataset.shuffle(buffer_size=len(batched_fnames))  # Paired frames are shuffled.
 
-    ## Flatten everything | Order will be preserved in map and flat_map.
-    ## https://stackoverflow.com/questions/49960875 -- flatten
-    ## https://stackoverflow.com/questions/51015918 -- order
+    # Flatten everything | Order will be preserved in map and flat_map.
+    # https://stackoverflow.com/questions/49960875 -- flatten
+    # https://stackoverflow.com/questions/51015918 -- order
     dataset = dataset.flat_map(tf.data.Dataset.from_tensor_slices)
-    dataset = dataset.map(load_image)  ## Single frame images loaded.
+    dataset = dataset.map(load_image)  # Single frame images loaded.
 
-    dataset = dataset.window(size=NFRAMES, drop_remainder=True)  ## Window consecutive frames.
-    dataset = dataset.flat_map(lambda dset: dset.batch(NFRAMES))  ## Group the frames | Loaded frames are paired again.
+    dataset = dataset.window(size=NFRAMES, drop_remainder=True)  # Window consecutive frames.
+    dataset = dataset.flat_map(lambda dset: dset.batch(NFRAMES))  # Group the frames | Loaded frames are paired again.
 
     dataset = dataset.map(
-        make_patches)  ## Generate patches for paired frames AND swap axes : [patches, NFRAMES, k, k, c]
+        make_patches)  # Generate patches for paired frames AND swap axes : [patches, NFRAMES, k, k, c]
 
-    dataset = dataset.flat_map(tf.data.Dataset.from_tensor_slices)  ## Flatten | single tensors of [NFRAMES, k, k, c]
+    dataset = dataset.flat_map(tf.data.Dataset.from_tensor_slices)  # Flatten | single tensors of [NFRAMES, k, k, c]
 
-    dataset = dataset.shuffle(buffer_size= BATCHSIZE*3)  ## After single tensors and BEFORE (x,y) generation.
+    dataset = dataset.shuffle(buffer_size= BATCHSIZE*3)  # After single tensors and BEFORE (x,y) generation.
 
-    dataset = dataset.map(make_xy)  ## Return (X,Y): (Downscaled, Original)
+    dataset = dataset.map(make_xy)  # Return (X,Y): (Downscaled, Original)
 
-    dataset = dataset.batch(BATCHSIZE)  ## Final batching.
+    dataset = dataset.batch(BATCHSIZE)  # Final batching.
     return dataset
 
 
