@@ -8,18 +8,17 @@ Classes for different Spatio-Temporal Models.
 Refer to Fig.4 for comparision of architectures.
 """
 
-
 import numpy as np
 import tensorflow as tf
-keras = tf.keras
-from keras.layers import TimeDistributed
-from keras.layers import Conv2D
-from keras.activations import linear
-from keras.layers import Layer
+from tensorflow.keras import layers
+from tensorflow.keras.layers import TimeDistributed
+from tensorflow.keras.layers import Conv2D
+from tensorflow.keras.activations import linear
+from tensorflow.keras.layers import Layer
 
 
 def early_fusion(timeframes, iheight, iwidth, channels=3,
-                nfilters=None, ksize=3, activation=relu):
+                nfilters=None, ksize=3, activation="relu"):
     """
     A wrapper over TimeDistributed layer for Early Fusion.
     Returns a TimeDistributed Conv2d layer you can add to the model.
@@ -67,7 +66,7 @@ class EarlyFusion(Layer):
             nfilters = 24 // timeframes
 
         self.convTd = TimeDistributed(
-            Conv2D(nfilters, ksize, activation=activation),
+            Conv2D(nfilters, ksize, activation=activation, padding="same"),
             input_shape=(timeframes, iheight, iwidth, channels)
         )
 
