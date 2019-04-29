@@ -146,3 +146,4 @@ This will create a `frames` dir in your current directory.
 ## References
 - VESPCN implementation (unofficial, TF) - <https://github.com/LoSealL/VideoSuperResolution/blob/master/VSR/Models/Vespcn.py>
 - Fully-featured TF2 implementation of YOLOv3 (for checking TF2 oddities) - <https://github.com/zzh8829/yolov3-tf2>
+- PyTorch Implementation (unofficial) - <https://github.com/JuheonYi/VESPCN-PyTorch>
