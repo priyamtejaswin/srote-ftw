@@ -118,8 +118,9 @@ def make_xy(patches):
     """
     downed = tf.image.resize_images(patches, [DOWNK, DOWNK])
 
-    paddings = tf.constant([[0, 0], [1, 1], [1, 1], [0, 0]])
-    downed = tf.pad(downed, paddings=paddings)
+    # paddings = tf.constant([[0, 0], [1, 1], [1, 1], [0, 0]])
+    # downed = tf.pad(downed, paddings=paddings)
+    # `tf.pad` not required if you keep "SAME" padding during conv2d ops.
     return downed, patches[0] # Error against single HiRes frames only.
 
 
