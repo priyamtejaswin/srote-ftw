@@ -10,7 +10,6 @@ Refer to Fig.4 for comparision of architectures.
 
 import numpy as np
 import tensorflow as tf
-from tensorflow.keras import layers
 from tensorflow.keras.layers import TimeDistributed
 from tensorflow.keras.layers import Conv2D
 from tensorflow.keras.activations import linear
