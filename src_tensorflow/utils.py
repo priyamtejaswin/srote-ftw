@@ -12,12 +12,6 @@ import tensorflow as tf
 
 
 VFDEL = '___' # VideoName___FrameId.png delimiter.
-NFRAMES = 2 # Number of consecutive frames considered per sample.
-
-KERNEL = 192 # Patch height and width.
-STRIDE = 14 # Stride while taking patches.
-DOWNK = 96 # Downscaled height and width.
-BATCHSIZE = 64
 
 
 def _fskey(f):
@@ -32,7 +26,7 @@ def _fskey(f):
     return vname, fid
 
 
-def load_fnames(fdir):
+def load_fnames(fdir, NFRAMES=3):
     """
     Load all frame names from every video directory.
     Group frames by NFRAMES param.
@@ -79,7 +73,7 @@ def load_image(fpath):
     return image
 
 
-def make_patches(image):
+def make_patches(image, NFRAMES=3, KERNEL=96, STRIDE=14):
     """
     Extract patches from a grouped Tensor (NFRAMES, HEIGHT, WIDTH, CHANNELS).
     ==> Reshape patches to Tensor (NFRAMES, NUM_PATCHES, KERNEL, KERNEL, CHANNELS).
@@ -109,7 +103,7 @@ def make_patches(image):
     return patches
 
 
-def make_xy(patches):
+def make_xy(patches, DOWNK=32):
     """
     Downscale input and return (x, y) pairs.
 
@@ -124,10 +118,16 @@ def make_xy(patches):
     return downed, patches[0] # Error against single HiRes frames only.
 
 
-def build_dataset(batched_fnames):
+def build_dataset(batched_fnames, NFRAMES=3, BATCHSIZE=64,
+                  KERNEL=96, STRIDE=14, DOWNK=32):
     """
     Build tf.data.Dataset from grouped frame paths.
 
+    :param NFRAMES = 2 # Number of consecutive frames considered per sample.
+    :param KERNEL = 192 # Patch height and width.
+    :param STRIDE = 14 # Stride while taking patches.
+    :param DOWNK = 96 # Downscaled height and width.
+    :param BATCHSIZE = 64
     :param batched_fnames: List of frames, grouped by NFRAMES.
     :return: Proper tf.data.Dataset object.
     """
