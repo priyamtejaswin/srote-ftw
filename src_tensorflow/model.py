@@ -1,13 +1,17 @@
 import tensorflow as tf
 import numpy as np
-from fusion import EarlyFusion
 from tensorflow.keras.layers import Layer
 from tensorflow.keras.layers import Conv2D
 from tensorflow.keras import Model
 from motion import MotionCompensation 
 from fusion import EarlyFusion
 
+
 class ENHANCE(Model):
+    """
+    <https://www.youtube.com/watch?v=Vxq9yj2pVWk>
+    One step closer to the future... unless of course, the eigen value is off. /s
+    """
 
     def __init__(self):
         super(ENHANCE, self).__init__() 
@@ -28,8 +32,10 @@ class ENHANCE(Model):
         # frames is (batchsize x 3 x 32 x 32 x 3)
         comp1 = self.motion_compensate(frames[:,1,:,:,:], frames[:,0,:,:,:])
         comp2 = self.motion_compensate(frames[:,1,:,:,:], frames[:,2,:,:,:])
+
         all_frames = tf.stack((comp1, frames[:,1,:,:], comp2), axis=1)
         ef = self.earlyfusion(all_frames)
+        
         out = self.conv1(ef) 
         out = self.conv2(out)
         out = self.conv3(out) 
@@ -40,9 +46,9 @@ class ENHANCE(Model):
 
         return upped
 
+
 if __name__ == "__main__":
 
-    import ipdb; ipdb.set_trace()
     print 'Testing...'
     tf.enable_eager_execution()
     print "TF Executing Eagerly?", tf.executing_eagerly()
