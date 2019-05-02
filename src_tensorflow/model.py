@@ -1,0 +1,64 @@
+import tensorflow as tf
+import numpy as np
+from fusion import EarlyFusion
+from tensorflow.keras.layers import Layer
+from tensorflow.keras.layers import Conv2D
+from tensorflow.keras import Model
+from motion import MotionCompensation 
+from fusion import EarlyFusion
+
+class ENHANCE(Model):
+
+    def __init__(self):
+        super(ENHANCE, self).__init__() 
+
+        self.motion_compensate = MotionCompensation() 
+        self.earlyfusion = EarlyFusion(timeframes=3, iheight=32, iwidth=32, channels=3)
+        
+        # conv layers after compensation
+        self.conv1 = Conv2D(filters=24, kernel_size=(3,3), strides=(1,1), activation="relu", padding="same")
+        self.conv2 = Conv2D(filters=32, kernel_size=(3,3), strides=(1,1), activation="relu", padding="same")
+        self.conv3 = Conv2D(filters=32, kernel_size=(3,3), strides=(1,1), activation="relu", padding="same")
+        self.conv4 = Conv2D(filters=32, kernel_size=(3,3), strides=(1,1), activation="relu", padding="same")
+        self.conv5 = Conv2D(filters=32, kernel_size=(3,3), strides=(1,1), activation="relu", padding="same")
+        self.conv6 = Conv2D(filters=27, kernel_size=(3,3), strides=(1,1), activation="linear", padding="same")
+
+    def call(self, frames):
+        
+        # frames is (batchsize x 3 x 32 x 32 x 3)
+        comp1 = self.motion_compensate(frames[:,1,:,:,:], frames[:,0,:,:,:])
+        comp2 = self.motion_compensate(frames[:,1,:,:,:], frames[:,2,:,:,:])
+        all_frames = tf.stack((comp1, frames[:,1,:,:], comp2), axis=1)
+        ef = self.earlyfusion(all_frames)
+        out = self.conv1(ef) 
+        out = self.conv2(out)
+        out = self.conv3(out) 
+        out = self.conv4(out) 
+        out = self.conv5(out) 
+        out = self.conv6(out) 
+        upped = tf.depth_to_space(out, 3)
+
+        return upped
+
+if __name__ == "__main__":
+
+    import ipdb; ipdb.set_trace()
+    print 'Testing...'
+    tf.enable_eager_execution()
+    print "TF Executing Eagerly?", tf.executing_eagerly()
+
+    x = tf.constant(np.random.rand(5, 3, 32, 32, 3).astype(np.float32))
+    enhance = ENHANCE() 
+    y = enhance(x) 
+    print(y.shape)
+
+
+
+
+        
+        
+
+
+
+
+
