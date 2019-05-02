@@ -9,6 +9,7 @@ Refer `src_tensorflow/warping.py`
 
 
 import tensorflow as tf
+import numpy as np
 from fusion import EarlyFusion
 from tensorflow.keras.layers import Layer
 from tensorflow.keras.layers import Conv2D
@@ -119,3 +120,19 @@ class MotionCompensation(Layer):
 
 if __name__ == '__main__':
     print 'Testing...'
+    tf.enable_eager_execution()
+    print "TF Executing Eagerly?", tf.executing_eagerly()
+
+    x = tf.constant(np.random.rand(5, 2, 32, 32, 3).astype(np.float32))
+
+    print 'Testing EarlyFusion...'
+    efl = EarlyFusion(timeframes=2, iheight=32, iwidth=32, channels=3)
+    print efl(x).shape
+
+    print 'Testing CoarseFlow...'
+    cf = CoarseFlow()
+    print cf(x).shape
+
+    print 'Testing MC...'
+    mc = MotionCompensation()
+    print mc(x[:, 0], x[:, 1]).shape
