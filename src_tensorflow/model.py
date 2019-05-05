@@ -30,8 +30,8 @@ class ENHANCE(Model):
     def call(self, frames):
         
         # frames is (batchsize x 3 x 32 x 32 x 3)
-        comp1 = self.motion_compensate(frames[:,1,:,:,:], frames[:,0,:,:,:])
-        comp2 = self.motion_compensate(frames[:,1,:,:,:], frames[:,2,:,:,:])
+        comp1, flow1 = self.motion_compensate(frames[:,1,:,:,:], frames[:,0,:,:,:])
+        comp2, flow2 = self.motion_compensate(frames[:,1,:,:,:], frames[:,2,:,:,:])
 
         all_frames = tf.stack((comp1, frames[:,1,:,:], comp2), axis=1)
         ef = self.earlyfusion(all_frames)
@@ -44,7 +44,7 @@ class ENHANCE(Model):
         out = self.conv6(out) 
         upped = tf.depth_to_space(out, 3)
 
-        return upped
+        return upped, (flow1, flow2)
 
 
 if __name__ == "__main__":
@@ -55,7 +55,7 @@ if __name__ == "__main__":
 
     x = tf.constant(np.random.rand(5, 3, 32, 32, 3).astype(np.float32))
     enhance = ENHANCE() 
-    y = enhance(x) 
+    y = enhance(x)[0]
     print(y.shape)
 
 
