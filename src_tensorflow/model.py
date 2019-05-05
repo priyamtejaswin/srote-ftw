@@ -44,7 +44,7 @@ class ENHANCE(Model):
         out = self.conv6(out) 
         upped = tf.depth_to_space(out, 3)
 
-        return upped, (flow1, flow2)
+        return upped, (flow1, flow2), (comp1, comp2), frames
 
 
 if __name__ == "__main__":
