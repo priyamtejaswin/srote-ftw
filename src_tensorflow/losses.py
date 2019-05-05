@@ -15,6 +15,24 @@ import tensorflow as tf
 from model import ENHANCE
 from utils import load_fnames
 from utils import build_dataset
+from tensorflow.keras.applications import vgg16
+from tensorflow.keras import Model
+from tensorflow.keras import backend as K
+
+def perceptual_loss_wrapper(vgg_layer="block2_conv2"):
+    vgg = vgg16.VGG16(include_top=False, weights="imagenet")
+    perceptual_layer_model = Model(
+        inputs=vgg.input, 
+        outputs=vgg.get_layer(vgg_layer).output)
+    perceptual_layer_model.trainable=False 
+    perceptual_layer_model.compile(loss="mse", optimizer="adam")
+    
+    def perceptual_loss(y_true, y_pred):
+        y_true_vgg = perceptual_layer_model(y_true)
+        y_pred_vgg = perceptual_layer_model(y_pred)
+        return tf.reduce_mean(tf.square(y_pred_vgg - y_true_vgg))
+    
+    return perceptual_loss
 
 
 def huber_loss(flows, epsilon=0.01):
@@ -42,19 +60,22 @@ def combined_loss(model_out, true_y):
 
 
 if __name__ == '__main__':
+    import ipdb; ipdb.set_trace()
     tf.enable_eager_execution()
     print 'Tf executing eagerly?', tf.executing_eagerly()
 
-    fnames = load_fnames('../data/frames')
-    dataset = build_dataset(fnames[:5])
+    fnames = load_fnames('../../frames')
+    dataset = build_dataset(fnames[:2])
 
     model = ENHANCE()
     optimizer = tf.train.AdamOptimizer()
+    percept_loss = perceptual_loss_wrapper()
 
     for ix, (x,y) in enumerate(dataset):
         with tf.GradientTape() as tape:
             preds, (flow1, flow2) = model(x)
-            loss = huber_loss(flow1) + huber_loss(flow2)
+            loss = huber_loss(flow1) + huber_loss(flow2)  
+            loss = loss + percept_loss(y, preds)
 
         grads = tape.gradient(loss, model.trainable_variables)
         optimizer.apply_gradients(zip(grads, model.trainable_variables),
