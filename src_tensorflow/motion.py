@@ -115,7 +115,7 @@ class MotionCompensation(Layer):
         # warp
         compensated_frame = tf.contrib.image.dense_image_warp(other_frame, total_flow)
 
-        return compensated_frame
+        return compensated_frame, total_flow  # Needed for Huber loss computation.
 
 
 if __name__ == '__main__':
@@ -135,4 +135,5 @@ if __name__ == '__main__':
 
     print 'Testing MC...'
     mc = MotionCompensation()
-    print mc(x[:, 0], x[:, 1]).shape
+    compensated_frame, total_flow = mc(x[:, 0], x[:, 1])
+    print compensated_frame.shape, total_flow.shape
