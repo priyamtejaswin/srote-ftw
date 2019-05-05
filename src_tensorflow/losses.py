@@ -17,17 +17,6 @@ from utils import load_fnames
 from utils import build_dataset
 
 
-def combined_loss(pred_y, true_y):
-    """
-    Perceptual loss + Huber loss
-
-    :param pred_y: Super-resolved image.
-    :param true_y: High-res image
-    :return: training loss.
-    """
-    pass
-
-
 def huber_loss(flows, epsilon=0.01):
     """
     Huber loss. Eq 6.
@@ -46,16 +35,48 @@ def huber_loss(flows, epsilon=0.01):
     return avg_batch_loss
 
 
-def main():
-    frames_dir = sys.argv[1]
-    if not os.path.isdir(frames_dir):
-        raise OSError('Input path is not a directory or does not exist!')
-
-    frames_list = load_fnames(frames_dir)
-    dataset = build_dataset(frames_list[:3])
-
-    model = ENHANCE()
+def combined_loss(model_out, true_y):
+    pred_y, (flow1, flow2) = model_out
+    flow_loss = huber_loss(flow1) + huber_loss(flow2)
+    return flow_loss
 
 
 if __name__ == '__main__':
-    main()
+    tf.enable_eager_execution()
+    print 'Tf executing eagerly?', tf.executing_eagerly()
+
+    fnames = load_fnames('../data/frames')
+    dataset = build_dataset(fnames[:5])
+
+    model = ENHANCE()
+    optimizer = tf.train.AdamOptimizer()
+
+    for ix, (x,y) in enumerate(dataset):
+        with tf.GradientTape() as tape:
+            preds, (flow1, flow2) = model(x)
+            loss = huber_loss(flow1) + huber_loss(flow2)
+
+        grads = tape.gradient(loss, model.trainable_variables)
+        optimizer.apply_gradients(zip(grads, model.trainable_variables),
+                                  global_step=tf.train.get_or_create_global_step())
+
+        print 'Step: {}, Loss: {}'.format(ix, loss.numpy())
+
+    # train_loss = tf.keras.metrics.Mean(name='train_loss')
+    # @tf.py_function
+    # def train_step(low_res, high_res):
+    #     with tf.GradientTape() as tape:
+    #         upped, (flow1, flow2) = model(low_res)
+    #         loss = huber_loss(flow1) + huber_loss(flow2)
+    #
+    #     gradients = tape.gradient(loss, model.trainable_variables)
+    #     optimizer.apply_gradients(zip(gradients, model.trainable_variables))
+    #
+    #     train_loss(loss)
+    #
+    # for epoch in range(5):
+    #     for x,y in dataset:
+    #         train_step(x, y)
+    #
+    #     template = 'Epoch {}, Loss: {}'
+    #     print template.format(epoch+1, train_loss.result())
