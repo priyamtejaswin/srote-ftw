@@ -17,7 +17,7 @@ from utils import load_fnames
 from utils import build_dataset
 from tensorflow.keras.applications import vgg16
 from tensorflow.keras import Model
-from tensorflow.keras import backend as K
+
 
 def perceptual_loss_wrapper(vgg_layer="block2_conv2"):
     vgg = vgg16.VGG16(include_top=False, weights="imagenet")
@@ -53,13 +53,8 @@ def huber_loss(flows, epsilon=0.01):
     return avg_batch_loss
 
 
-def combined_loss(model_out, true_y):
-    pred_y, (flow1, flow2) = model_out
-    flow_loss = huber_loss(flow1) + huber_loss(flow2)
-    return flow_loss
-
-class CombinedLoss():
-    def __init__(self, alpha, beta, gamma, lam):
+class CombinedLoss:
+    def __init__(self, alpha=0.0, beta=0.0, gamma=1.0, lam=1.0):
         """
         alpha: multiplier for basic mse loss 
         beta: multiplier for spatial motion compensation loss (like in paper)
@@ -72,8 +67,7 @@ class CombinedLoss():
         self.gamma = gamma 
         self.lam = lam 
     
-    @staticmethod
-    def mse(x,y):
+    def mse(self, x, y):
         return tf.reduce_mean(tf.square(x-y))
 
     def all_loss(self, y_true, y_pred, flow1, flow2, comp1, comp2, frames):
@@ -84,11 +78,11 @@ class CombinedLoss():
         flow2: flow vector for i_t and i_t-1 
         """
         # basic mse loss 
-        basic_mse = mse(y_pred, y_true)
+        basic_mse = self.mse(y_pred, y_true)
 
         # motion comp
-        comp1_mse = self.beta * mse(comp1, frames)
-        comp2_mse = self.beta * mse(comp2, frames)
+        comp1_mse = self.beta * self.mse(comp1, frames[:, 0])
+        comp2_mse = self.beta * self.mse(comp2, frames[:, 2])
 
         # huber loss
         huber1 = huber_loss(flow1)
@@ -98,36 +92,44 @@ class CombinedLoss():
         perc_mse = self._perceptual_loss_function(y_true, y_pred)
 
         # combine the losses 
-        full_loss = (self.alpha * basic_mse) + (self.beta * comp1_mse) +
-                    (self.lam * huber1) + (self.beta * comp2_mse) + 
-                    (self.lam * huber2) + (self.gamma * perc_mse) 
+        full_loss = (self.alpha * basic_mse) + (self.beta * comp1_mse) \
+                    + (self.lam * huber1) + (self.beta * comp2_mse) \
+                    + (self.lam * huber2) + (self.gamma * perc_mse)
         
         return full_loss
 
 
 if __name__ == '__main__':
-    import ipdb; ipdb.set_trace()
     tf.enable_eager_execution()
     print 'Tf executing eagerly?', tf.executing_eagerly()
 
-    fnames = load_fnames('../../frames')
-    dataset = build_dataset(fnames[:2])
+    tf.set_random_seed(1)
+
+    fnames = load_fnames('../data/frames')
+    dataset = build_dataset(fnames[:5])
 
     model = ENHANCE()
     optimizer = tf.train.AdamOptimizer()
     percept_loss = perceptual_loss_wrapper()
+    combined_loss = CombinedLoss().all_loss
 
-    for ix, (x,y) in enumerate(dataset):
-        with tf.GradientTape() as tape:
-            preds, (flow1, flow2) = model(x)
-            loss = huber_loss(flow1) + huber_loss(flow2)  
-            loss = loss + percept_loss(y, preds)
+    for epoch in range(1):
+        for ix, (x,y) in enumerate(dataset.take(10)):
+            with tf.GradientTape() as tape:
+                preds, (flow1, flow2), (comp1, comp2) = model(x)
+                loss = huber_loss(flow1) + huber_loss(flow2)
+                loss = loss + percept_loss(y_true=y, y_pred=preds)
+                # loss = combined_loss(y_true=y, y_pred=preds,
+                #                      flow1=flow1, flow2=flow2,
+                #                      comp1=comp1, comp2=comp2,
+                #                      frames=x)
 
-        grads = tape.gradient(loss, model.trainable_variables)
-        optimizer.apply_gradients(zip(grads, model.trainable_variables),
-                                  global_step=tf.train.get_or_create_global_step())
+            grads = tape.gradient(loss, model.trainable_variables)
+            optimizer.apply_gradients(zip(grads, model.trainable_variables),
+                                      global_step=tf.train.get_or_create_global_step())
 
-        print 'Step: {}, Loss: {}'.format(ix, loss.numpy())
+            if ix%1 == 0:
+                print 'Epoch: {}, Step: {}, Loss: {}'.format(epoch+1, ix+1, loss.numpy())
 
     # train_loss = tf.keras.metrics.Mean(name='train_loss')
     # @tf.py_function
