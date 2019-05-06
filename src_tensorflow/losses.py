@@ -117,12 +117,12 @@ if __name__ == '__main__':
         for ix, (x,y) in enumerate(dataset.take(10)):
             with tf.GradientTape() as tape:
                 preds, (flow1, flow2), (comp1, comp2) = model(x)
-                loss = huber_loss(flow1) + huber_loss(flow2)
-                loss = loss + percept_loss(y_true=y, y_pred=preds)
-                # loss = combined_loss(y_true=y, y_pred=preds,
-                #                      flow1=flow1, flow2=flow2,
-                #                      comp1=comp1, comp2=comp2,
-                #                      frames=x)
+                # loss = huber_loss(flow1) + huber_loss(flow2)
+                # loss = loss + percept_loss(y_true=y, y_pred=preds)
+                loss = combined_loss(y_true=y, y_pred=preds,
+                                     flow1=flow1, flow2=flow2,
+                                     comp1=comp1, comp2=comp2,
+                                     frames=x)
 
             grads = tape.gradient(loss, model.trainable_variables)
             optimizer.apply_gradients(zip(grads, model.trainable_variables),
