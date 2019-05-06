@@ -143,7 +143,7 @@ def build_dataset(batched_fnames, NFRAMES=3, BATCHSIZE=64,
     dataset = dataset.window(size=NFRAMES, drop_remainder=True)  # Window consecutive frames.
     dataset = dataset.flat_map(lambda dset: dset.batch(NFRAMES))  # Group the frames | Loaded frames are paired again.
 
-    dataset = dataset.map( lambda x: make_patches(x, STRIDE=100))
+    dataset = dataset.map(lambda x: make_patches(x, STRIDE=STRIDE))
         # make_patches)  # Generate patches for paired frames AND swap axes : [patches, NFRAMES, k, k, c]
 
     dataset = dataset.flat_map(tf.data.Dataset.from_tensor_slices)  # Flatten | single tensors of [NFRAMES, k, k, c]
