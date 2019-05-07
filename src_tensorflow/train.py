@@ -19,6 +19,7 @@ import tensorflow as tf
 import os
 import sys
 
+from tqdm import tqdm
 from model import ENHANCE
 from losses import CombinedLoss
 from utils import load_fnames, build_dataset
@@ -37,7 +38,7 @@ lossfn = CombinedLoss().all_loss
 optimizer = tf.optimizers.Adam()
 
 batched_fnames = load_fnames(frames_dir)
-dataset = build_dataset(batched_fnames[:5])
+dataset = build_dataset(batched_fnames)
 
 @tf.function
 def train_step(x, y):
@@ -55,6 +56,6 @@ def train_step(x, y):
 
 template = 'Epoch: {}, Step: {}, Train Loss: {}'
 for epoch in range(1):
-    for ix, (x,y) in enumerate(dataset):
+    for ix, (x,y) in tqdm(enumerate(dataset)):
         train_loss = train_step(x, y)
         print template.format(epoch+1, ix+1, train_loss.numpy())

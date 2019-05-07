@@ -18,6 +18,7 @@ To start testing/developing, run the following commands (we like [conda](https:/
 conda create --name tf2alpha python=2.7.14
 pip install tensorflow==2.0.0-alpha0
 pip install tensorflow-addons
+pip install tqdm
 ```
 
 ## System Design
