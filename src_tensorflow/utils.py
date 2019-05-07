@@ -153,6 +153,8 @@ def build_dataset(batched_fnames, NFRAMES=3, BATCHSIZE=64,
     dataset = dataset.map(make_xy)  # Return (X,Y): (Downscaled, Original)
 
     dataset = dataset.batch(BATCHSIZE)  # Final batching.
+
+    dataset = dataset.prefetch(2)
     return dataset
 
 

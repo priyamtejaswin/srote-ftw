@@ -33,12 +33,14 @@ frames_dir = sys.argv[1]
 if not os.path.isdir(frames_dir):
     raise OSError('Directory does not exist -- ' + frames_dir)
 
+
 model = ENHANCE()
 lossfn = CombinedLoss().all_loss
 optimizer = tf.optimizers.SGD(nesterov=True, momentum=0.9)
 
 batched_fnames = load_fnames(frames_dir)
 dataset = build_dataset(batched_fnames)
+
 
 @tf.function
 def train_step(x, y):
@@ -55,7 +57,8 @@ def train_step(x, y):
 
 
 template = 'Epoch: {}, Step: {}, Train Loss: {}'
-for epoch in range(1):
+for epoch in range(10):
     for ix, (x,y) in enumerate(dataset):
         train_loss = train_step(x, y)
-        print template.format(epoch+1, ix+1, train_loss.numpy())
+        if (ix+1)%1 == 0:
+            print template.format(epoch+1, ix+1, train_loss.numpy())
