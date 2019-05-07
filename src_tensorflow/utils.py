@@ -67,7 +67,7 @@ def load_image(fpath):
     :param fpath: Path to frame image file.
     :return: Decoded image. (HEIGHT, WIDTH, CHANNEL)
     """
-    image_string = tf.read_file(fpath)
+    image_string = tf.io.read_file(fpath)
     image = tf.image.decode_png(image_string, channels=3)
     image = tf.image.convert_image_dtype(image, tf.float32)
     return image
@@ -87,7 +87,7 @@ def make_patches(image, NFRAMES=3, KERNEL=96, STRIDE=14):
     channels = tf.shape(image)[-1]
     patches = tf.image.extract_image_patches(
         image,
-        ksizes=[1, KERNEL, KERNEL, 1],
+        sizes=[1, KERNEL, KERNEL, 1],
         strides=[1, STRIDE, STRIDE, 1],
         rates=[1, 1, 1, 1],
         padding='VALID'
@@ -110,7 +110,7 @@ def make_xy(patches, DOWNK=32):
     :param patches: Original high-res image.
     :return: Downsampled image. Kernel is default (BiLinear??)
     """
-    downed = tf.image.resize_images(patches, [DOWNK, DOWNK])
+    downed = tf.image.resize(patches, [DOWNK, DOWNK])
 
     # paddings = tf.constant([[0, 0], [1, 1], [1, 1], [0, 0]])
     # downed = tf.pad(downed, paddings=paddings)

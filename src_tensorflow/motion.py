@@ -9,6 +9,7 @@ Refer `src_tensorflow/warping.py`
 
 
 import tensorflow as tf
+import tensorflow_addons as tfa
 import numpy as np
 from fusion import EarlyFusion
 from tensorflow.keras.layers import Layer
@@ -39,7 +40,7 @@ class CoarseFlow(Layer):
         out = self.C4(out)
         out = self.C5(out)
 
-        upped = tf.depth_to_space(out, 4)
+        upped = tf.nn.depth_to_space(out, 4)
         return upped
 
 
@@ -76,7 +77,7 @@ class FineFlow(Layer):
         out = self.C4(out)
         out = self.C5(out)
 
-        upped = tf.depth_to_space(out, 2)
+        upped = tf.nn.depth_to_space(out, 2)
         return upped
 
 
@@ -104,7 +105,7 @@ class MotionCompensation(Layer):
         coarse_flow_vectors = self.coarse_flow(frames)
 
         # warp
-        coarse_compensated_frame = tf.contrib.image.dense_image_warp(other_frame, coarse_flow_vectors)
+        coarse_compensated_frame = tfa.image.dense_image_warp(other_frame, coarse_flow_vectors)
 
         # fine flow
         fine_flow_vectors = self.fine_flow(frames, coarse_flow_vectors, coarse_compensated_frame)
@@ -113,7 +114,7 @@ class MotionCompensation(Layer):
         total_flow = coarse_flow_vectors + fine_flow_vectors
 
         # warp
-        compensated_frame = tf.contrib.image.dense_image_warp(other_frame, total_flow)
+        compensated_frame = tfa.image.dense_image_warp(other_frame, total_flow)
 
         return compensated_frame, total_flow  # Needed for Huber loss computation.
 

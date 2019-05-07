@@ -100,16 +100,16 @@ class CombinedLoss:
 
 
 if __name__ == '__main__':
-    tf.enable_eager_execution()
+    print 'tf version:', tf.__version__
     print 'Tf executing eagerly?', tf.executing_eagerly()
 
-    tf.set_random_seed(1)
+    tf.random.set_seed(1)
 
     fnames = load_fnames('../data/frames')
     dataset = build_dataset(fnames[:5])
 
     model = ENHANCE()
-    optimizer = tf.train.AdamOptimizer()
+    optimizer = tf.optimizers.Adam()
     percept_loss = perceptual_loss_wrapper()
     combined_loss = CombinedLoss().all_loss
 
@@ -125,27 +125,7 @@ if __name__ == '__main__':
                                      frames=x)
 
             grads = tape.gradient(loss, model.trainable_variables)
-            optimizer.apply_gradients(zip(grads, model.trainable_variables),
-                                      global_step=tf.train.get_or_create_global_step())
+            optimizer.apply_gradients(zip(grads, model.trainable_variables))
 
             if ix%1 == 0:
                 print 'Epoch: {}, Step: {}, Loss: {}'.format(epoch+1, ix+1, loss.numpy())
-
-    # train_loss = tf.keras.metrics.Mean(name='train_loss')
-    # @tf.py_function
-    # def train_step(low_res, high_res):
-    #     with tf.GradientTape() as tape:
-    #         upped, (flow1, flow2) = model(low_res)
-    #         loss = huber_loss(flow1) + huber_loss(flow2)
-    #
-    #     gradients = tape.gradient(loss, model.trainable_variables)
-    #     optimizer.apply_gradients(zip(gradients, model.trainable_variables))
-    #
-    #     train_loss(loss)
-    #
-    # for epoch in range(5):
-    #     for x,y in dataset:
-    #         train_step(x, y)
-    #
-    #     template = 'Epoch {}, Loss: {}'
-    #     print template.format(epoch+1, train_loss.result())

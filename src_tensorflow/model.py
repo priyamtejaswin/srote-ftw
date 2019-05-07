@@ -42,7 +42,7 @@ class ENHANCE(Model):
         out = self.conv4(out) 
         out = self.conv5(out) 
         out = self.conv6(out) 
-        upped = tf.depth_to_space(out, 3)
+        upped = tf.nn.depth_to_space(out, 3)
 
         return upped, (flow1, flow2), (comp1, comp2)
 
