@@ -13,6 +13,13 @@ Main reference paper : [Real-Time Video Super-Resolution with Spatio-Temporal Ne
 - `src_tensorflow` uses **tensorflow 1.13.1**. This is the latest stable release as of creating this repository.
 - `src_tf2` uses **tensorflow 2.0** which is still an alpha build.
 
+To start testing/developing, run the following commands (we like [conda](https://docs.conda.io/projects/conda/en/latest/user-guide/tasks/manage-environments.html)).
+```
+conda create --name tf2alpha python=2.7.14
+pip install tensorflow==2.0.0-alpha0
+pip install tensorflow-addons
+```
+
 ## System Design
 ![](system_blocks.jpg)
 
