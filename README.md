@@ -6,8 +6,7 @@ Main reference paper : [Real-Time Video Super-Resolution with Spatio-Temporal Ne
 .
 ├── README.md
 ├── papers ## PDFs for review and reference (not committed).
-├── src_tensorflow ## Code in tf (using `tensorflow.keras`). 
-└── src_tf2 ## Code in tf2_alpha.
+├── src_tensorflow ## Code in tf. 
 ```
 
 ## Dependencies
