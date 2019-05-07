@@ -1,0 +1,9 @@
+# training
+https://media.xiph.org/video/derf/y4m/ducks_take_off_444_720p50.y4m
+https://media.xiph.org/video/derf/y4m/FourPeople_1280x720_60.y4m
+https://media.xiph.org/video/derf/y4m/in_to_tree_444_720p50.y4m
+https://media.xiph.org/video/derf/y4m/Johnny_1280x720_60.y4m
+
+# testing
+https://media.xiph.org/video/derf/y4m/KristenAndSara_1280x720_60.y4m
+
