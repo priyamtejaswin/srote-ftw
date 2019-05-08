@@ -75,16 +75,15 @@ def train_step(x, y):
 # Training loop.
 template = 'Epoch: {}, Step: {}, Train Loss: {}'
 global_step = 0
-for epoch in range(50):
+for epoch in range(5):
     for ix, (x,y) in enumerate(dataset):
         global_step += 1
-
         train_loss = train_step(x, y)
-        if global_step % 5 == 0:
-            print template.format(epoch+1, ix+1, train_loss.numpy())
 
-        with train_summary_writer.as_default():
-            tf.summary.scalar('train_loss', train_loss.numpy(), step=global_step)
+        if global_step % 10 == 0:
+            print template.format(epoch+1, ix+1, train_loss.numpy())
+            with train_summary_writer.as_default():
+                tf.summary.scalar('train_loss', train_loss.numpy(), step=global_step)
 
         if global_step % 50 == 0:
             print 'Saving checkpoint ...'
