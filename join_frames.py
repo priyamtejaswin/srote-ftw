@@ -79,10 +79,20 @@ def dummy_upsample(hr_frame):
     return np.expand_dims(x_up, 0)
 
 
-def run(): 
-
-    tf.enable_eager_execution()
+def run():
     print "TF Executing Eagerly?", tf.executing_eagerly()
+
+    # Instantiate model.
+    from src_tensorflow.model import ENHANCE
+    model = ENHANCE()
+    optimizer = tf.optimizers.SGD(nesterov=True, momentum=0.9)
+
+    # Restore checkpoint.
+    ckpt = tf.train.Checkpoint(optimizer=optimizer, model=model)
+
+    project_dir = os.path.dirname(os.path.abspath(__file__))
+    checkpoints_dir = os.path.join(project_dir, 'data', 'checkpoints', 'host_biometrics')
+    ckpt.restore(tf.train.latest_checkpoint(checkpoints_dir))
 
     # extract video frames
     video_path = sys.argv[1] 
@@ -94,10 +104,6 @@ def run():
     os.mkdir("./temp/op_frames")
     cmd = "ffmpeg -i {} {}___%d.png".format(video_path, "./temp/ip_frames/frame")
     os.system(cmd)
-
-    model = ENHANCE() 
-    # weights_path = sys.argv[2]
-    # model.load_weights(weights_path)
 
     num_frames = os.listdir("./temp/ip_frames")
     num_frames = [f.replace(".png","") for f in num_frames]
@@ -130,10 +136,10 @@ def run():
         # predict  
         hr_frames = []
         for patch_idx in range(len(frames)):
-            # hr_frame,_,_ = model(frames[patch_idx: patch_idx+1])
-            # hr_frames.append(hr_frame.numpy())
-            hr_frame = dummy_upsample(frames[patch_idx: patch_idx+1])
-            hr_frames.append(hr_frame)
+            hr_frame, _, _ = model(frames[patch_idx: patch_idx+1])
+            hr_frames.append(hr_frame.numpy())
+            # hr_frame = dummy_upsample(frames[patch_idx: patch_idx+1])
+            # hr_frames.append(hr_frame)
 
         hr_frames = np.concatenate(hr_frames, axis=0)
 
