@@ -23,10 +23,12 @@ ffmpeg -i frame___%d.png video.mp4
 
 import tensorflow as tf 
 from src_tensorflow.model import ENHANCE
+
 import os, sys, time
 import shutil
 import numpy as np 
 from PIL import Image
+from tqdm import tqdm
 
 
 def im2patches(pil_img):
@@ -83,7 +85,6 @@ def run():
     print "TF Executing Eagerly?", tf.executing_eagerly()
 
     # Instantiate model.
-    from src_tensorflow.model import ENHANCE
     model = ENHANCE()
     optimizer = tf.optimizers.SGD(nesterov=True, momentum=0.9)
 
@@ -111,9 +112,10 @@ def run():
     num_frames = max(num_frames)
     print("We have {} frames".format(num_frames))
 
-    for frame_idx in range(1, num_frames+1 - 2):
 
-        print("Processing for frame: {}".format(frame_idx))
+    for frame_idx in tqdm(range(1, num_frames+1 - 2)):
+
+        # print("Processing for frame: {}".format(frame_idx))
 
         f1 = Image.open("./temp/ip_frames/frame___{}.png".format(frame_idx)).convert("RGB")
         f2 = Image.open("./temp/ip_frames/frame___{}.png".format(frame_idx+1)).convert("RGB")
