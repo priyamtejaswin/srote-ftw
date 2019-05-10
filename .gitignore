@@ -6,3 +6,5 @@ data/*
 *.pyc
 frames/*
 models/*
+PIL/*
+temp/*
