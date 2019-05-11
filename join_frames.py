@@ -43,17 +43,22 @@ def im2patches(pil_img):
             patches.append(patch)
     return patches 
 
-def patches2im(patches):
+
+def patches2im(patches, full_res):
     """
-    reconstruct a 1080x1920x3 numpy image from 220x96x96x3 patches 
+    Reconstruct the `full_res` image from smaller `patches`.
+    :param patches: Super-resolved image patches.
+    :param full_res: Shape (h, w, c) of the full image.
+    :return:
     """
-    np_img = np.zeros((1080, 1920, 3), dtype=np.float)
+    np_img = np.zeros(full_res, dtype=np.float)
     patch_idx = 0
     for r_idx in range(np_img.shape[0] // 96):
         for c_idx in range(np_img.shape[1] // 96):
             np_img[ r_idx*96:r_idx*96 + 96, c_idx*96:c_idx*96+96, : ] += patches[patch_idx]
             patch_idx += 1
     return np_img
+
 
 def sanitize_img(img):
     """
@@ -65,6 +70,7 @@ def sanitize_img(img):
     img_copy = img_copy * 255.0 
     return img_copy.astype(np.uint8)
 
+
 def downsample_patches(patches):
     down_patches = [] 
     for p in patches: 
@@ -73,6 +79,7 @@ def downsample_patches(patches):
         im_np = np.asarray(im)
         down_patches.append(im_np)
     return down_patches
+
 
 def dummy_upsample(hr_frame):
     assert hr_frame.shape==(1,3,32,32,3)
@@ -145,18 +152,17 @@ def run():
 
         hr_frames = np.concatenate(hr_frames, axis=0)
 
-        hr_image = patches2im(hr_frames)
+        hr_image = patches2im(hr_frames, list(f1.size)+[3])
         hr_image = sanitize_img(hr_image)
     
         hr_image = Image.fromarray(hr_image)
         hr_image.save("./temp/op_frames/frame___{}.png".format(frame_idx))
 
-
-
-
-
-
-        
+    # Join with ffmpeg.
+    print "Joining frames..."
+    join_cmd = "ffmpeg -i {}___%d.png {}.mp4".format("./temp/op_frames/frame", "./temp/result")
+    os.system(join_cmd)
+    print "Successfully executed command: %s"%join_cmd
 
 
 if __name__ == "__main__":
