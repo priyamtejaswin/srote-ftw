@@ -91,6 +91,11 @@ def dummy_upsample(hr_frame):
 def run():
     print "TF Executing Eagerly?", tf.executing_eagerly()
 
+    # Collect cmd-line args.
+    video_path = sys.argv[1]
+    checkpoints_dir = sys.argv[2]
+    assert os.path.isdir(checkpoints_dir), "2nd arg `checkpoints_dir` does not exist or is not a directory!"
+
     # Instantiate model.
     model = ENHANCE()
     optimizer = tf.optimizers.SGD(nesterov=True, momentum=0.9)
@@ -98,12 +103,11 @@ def run():
     # Restore checkpoint.
     ckpt = tf.train.Checkpoint(optimizer=optimizer, model=model)
 
-    project_dir = os.path.dirname(os.path.abspath(__file__))
-    checkpoints_dir = os.path.join(project_dir, 'data', 'checkpoints', 'host_biometrics')
+    # project_dir = os.path.dirname(os.path.abspath(__file__))
+    # checkpoints_dir = os.path.join(project_dir, 'data', 'checkpoints', 'host_biometrics')
     ckpt.restore(tf.train.latest_checkpoint(checkpoints_dir))
 
     # extract video frames
-    video_path = sys.argv[1] 
     print("Extracting video frames for video {}".format(video_path))
     if os.path.exists("./temp"):
         shutil.rmtree("./temp")
