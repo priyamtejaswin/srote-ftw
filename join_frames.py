@@ -3,11 +3,10 @@
 created at: 23/04/19 1:15 AM
 created by: Priyam Tejaswin (tejaswin.p@flipkart.com), Akshay Chawla (akshaych@andrew.cmu.edu)
 
-Join frames into a video using ffmpeg.
+Super-resolve a test video.
 
-HOW TO USE? 
-
-python join_frames.py <path/to/video.mp4> 
+HOW TO USE?
+`python join_frames.py <path/to/video.mp4> <path/to/checkpoint/dir>`
 
 This will then create the follwing directories in your current folder
 ./temp
@@ -15,10 +14,7 @@ This will then create the follwing directories in your current folder
 ./temp/op_frames (will upscale the frames from ip_frames (first downscaled) 
                     using model and put the resulting hr frames here )
 
-After this utility has run cd to ./temp/op_frames and run the following command 
-to convert images "frames___x.png" to a video
-ffmpeg -i frame___%d.png video.mp4
-
+The super-resolved video will be saved at ./temp/result.mp4
 """
 
 import tensorflow as tf 
