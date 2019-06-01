@@ -46,6 +46,22 @@ class ENHANCE(Model):
 
         return upped, (flow1, flow2), (comp1, comp2)
 
+class Mocomp_test(Model):
+    """
+    This model just chesk if motion compensation is working 
+    """ 
+    def __init__(self):
+        super(Mocomp_test, self).__init__() 
+        self.motion_compensate = MotionCompensation() 
+    
+    def call(self, frames): 
+        
+        # frames is (batchsize x 2 x 32 x 32 x 3) Why 2 ? because we just want it to predict the optical flow 
+        # Note: frame0 is reference, frame1 is "other" frame
+        comp1, flow1 = self.motion_compensate(frames[:,0,:,:,:], frames[:,1,:,:,:])
+
+        return comp1, flow1
+
 
 if __name__ == "__main__":
 
