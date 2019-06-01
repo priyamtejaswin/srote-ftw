@@ -9,8 +9,15 @@ def im2patches(im, patch_size=(25,25), skip_last=False, zero_pad=True):
     h,w,_ = np_img.shape
     patches = [] 
     ph, pw = patch_size
-    _rows = h // ph + (0 if skip_last else 1)
-    _cols = w // pw + (0 if skip_last else 1) 
+    if h%ph==0: 
+        _rows = h // ph 
+    else: 
+        _rows = h // ph + (0 if skip_last else 1)
+    if w%pw==0:
+        _cols = w // pw 
+    else:
+        _cols = w // pw + (0 if skip_last else 1) 
+        
     for r_idx in range(_rows): 
         for c_idx in range(_cols): 
             patch = np_img[r_idx*ph: r_idx*ph + ph, c_idx*pw: c_idx*pw + pw, :] 
@@ -29,9 +36,15 @@ def patches2im(patches, img_size=(127,127), skip_last=False, zero_pad=True):
     patch_size = patches[0].shape[0:2] 
     ph, pw = patch_size 
     h,w = img_size 
-    _rows = h // ph + (0 if skip_last else 1)
-    _cols = w // pw + (0 if skip_last else 1) 
-    np_img = np.zeros((ph*_rows, ph*_cols, 3)).astype(np.float)
+    if h%ph==0: 
+        _rows = h // ph 
+    else: 
+        _rows = h // ph + (0 if skip_last else 1)
+    if w%pw==0:
+        _cols = w // pw 
+    else:
+        _cols = w // pw + (0 if skip_last else 1) 
+    np_img = np.zeros((ph*_rows, pw*_cols, 3)).astype(np.float)
     patch_idx = 0
     for r_idx in range(_rows): 
         for c_idx in range(_cols): 
@@ -56,7 +69,7 @@ def test():
         im = np.random.randn(im_h,im_w,3) 
         patch_size = (ph,pw) 
         patches = im2patches(im, patch_size, skip_last=False, zero_pad=True)
-        import pdb; pdb.set_trace()
+        # import pdb; pdb.set_trace()
         reconstructed = patches2im(patches, img_size=(im_h,im_w), skip_last=False, zero_pad=True)
         print("Image size: {} | patch_size: {} | recons OK? {}".format(
             (im_h, im_w), patch_size,  np.allclose(reconstructed, im)
