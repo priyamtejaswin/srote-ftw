@@ -7,7 +7,7 @@ import tensorflow as tf
 import os
 import sys
 
-from src_tensorflow.model import Mocomp_test
+from src_tensorflow.model import ENHANCE
 from src_tensorflow.utils import load_fnames, build_dataset
 from src_tensorflow.patcher import im2patches, patches2im
 from PIL import Image
@@ -21,6 +21,16 @@ def np2PIL(arr):
     arr = arr.astype(np.uint8)
     pil_im = Image.fromarray(arr)
     return pil_im
+
+def downsample_patches(patches):
+    down_patches = [] 
+    for p in patches: 
+        im = Image.fromarray(p.astype(np.uint8)) 
+        im = im.resize((32,32), Image.BICUBIC) 
+        im_np = np.asarray(im).astype(np.float) 
+        down_patches.append(im_np)
+    return down_patches
+    
 
 # def im2patches(pil_img):
 #     """
@@ -75,7 +85,7 @@ def test():
     assert os.path.isdir(checkpoints_dir), "2nd arg `checkpoints_dir` does not exist or is not a directory!"
 
     # Model prep.
-    model = Mocomp_test()
+    model = ENHANCE()
     optimizer = tf.optimizers.SGD(nesterov=True, momentum=0.9)
 
     # Restore checkpoint.
@@ -87,13 +97,25 @@ def test():
 
         f1 = Image.open("./temp/ip_frames/frame___{}.png".format(frame_idx)).convert("RGB")
         f2 = Image.open("./temp/ip_frames/frame___{}.png".format(frame_idx+1)).convert("RGB")
+        f3 = Image.open("./temp/ip_frames/frame___{}.png".format(frame_idx+2)).convert("RGB")
+
         f1_patches = im2patches(np.asarray(f1), patch_size=(96,96), skip_last=False, zero_pad=True)
         f2_patches = im2patches(np.asarray(f2), patch_size=(96,96), skip_last=False, zero_pad=True)
-        f1_patches = np.array(f1_patches) 
-        f2_patches = np.array(f2_patches) 
+        f3_patches = im2patches(np.asarray(f3), patch_size=(96,96), skip_last=False, zero_pad=True)
+
+        # downsample the patches
+        # TODO
+        f1_ds_patches = downsample_patches(f1_patches) 
+        f2_ds_patches = downsample_patches(f2_patches) 
+        f3_ds_patches = downsample_patches(f3_patches) 
+
+        f1_patches = np.array(f1_ds_patches) 
+        f2_patches = np.array(f2_ds_patches) 
+        f3_patches = np.array(f3_ds_patches)
+
 
         frames = np.stack(
-            (f1_patches, f2_patches), axis=1
+            (f1_patches, f2_patches, f3_patches), axis=1
         )
         frames = frames.astype(np.float32) / 255.0
 
@@ -104,8 +126,9 @@ def test():
         for start_idx in range(0, num_samples, batch_size):
             end_idx = min(num_samples, start_idx+batch_size)
             # print start_idx, end_idx, num_samples
-            comp1, flow1 = model(frames[start_idx: end_idx])
-            ops.append(comp1)
+            # comp1, flow1 = model(frames[start_idx: end_idx])
+            hr_frame, _, _ = model(frames[start_idx: end_idx])
+            ops.append(hr_frame)
         ops = np.concatenate(ops, axis=0)
         ops = list(ops) # converts just the first arr dimension to list (as required by patches2im)
 
@@ -114,16 +137,24 @@ def test():
         op_shape.reverse() 
         full_img = patches2im(ops, op_shape, skip_last=False, zero_pad=True)
 
+        # meta data about a single image 
+        print "min {} | max {} ".format(full_img.min(), full_img.max())
+
+        # fix full_img 
+        full_img = full_img - full_img.min() # range 0 to some max value
+        full_img /= full_img.max()  # range 0 to 1
+
+
         # convert to PIL image and save 
         full_img = Image.fromarray((full_img * 255.0).astype(np.uint8))
         full_img.save("./temp/op_frames/frame___{}.png".format(frame_idx))
 
 
     # Join with ffmpeg.
-    print "Joining frames..."
-    join_cmd = "ffmpeg -i {}___%d.png {}.mp4".format("./temp/op_frames/frame", "./temp/result")
-    os.system(join_cmd)
-    print "Successfully executed command: %s"%join_cmd
+    # print "Joining frames..."
+    # join_cmd = "ffmpeg -i {}___%d.png {}.mp4".format("./temp/op_frames/frame", "./temp/result")
+    # os.system(join_cmd)
+    # print "Successfully executed command: %s"%join_cmd
 
 
 

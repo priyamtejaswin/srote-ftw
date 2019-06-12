@@ -61,7 +61,7 @@ class CombinedLoss:
         gamma: multiplier for vgg16 perceptual loss 
         lam: multiplier for huber loss 
         """ 
-        self._perceptual_loss_function = perceptual_loss_wrapper() 
+        # self._perceptual_loss_function = perceptual_loss_wrapper() 
         self.alpha = alpha
         self.beta = beta 
         self.gamma = gamma 
@@ -81,20 +81,22 @@ class CombinedLoss:
         basic_mse = self.mse(y_pred, y_true)
 
         # motion comp
-        comp1_mse = self.beta * self.mse(comp1, frames[:, 0])
-        comp2_mse = self.beta * self.mse(comp2, frames[:, 2])
+        # comp1_mse = self.beta * self.mse(comp1, frames[:, 0])
+        # comp2_mse = self.beta * self.mse(comp2, frames[:, 2])
 
         # huber loss
-        huber1 = huber_loss(flow1)
-        huber2 = huber_loss(flow2)
+        # huber1 = huber_loss(flow1)
+        # huber2 = huber_loss(flow2)
 
         # perceptual loss 
-        perc_mse = self._perceptual_loss_function(y_true, y_pred)
+        # perc_mse = self._perceptual_loss_function(y_true, y_pred)
 
         # combine the losses 
-        full_loss = (self.alpha * basic_mse) + (self.beta * comp1_mse) \
-                    + (self.lam * huber1) + (self.beta * comp2_mse) \
-                    + (self.lam * huber2) + (self.gamma * perc_mse)
+        # full_loss = (self.alpha * basic_mse) + (self.beta * comp1_mse) \
+        #            + (self.lam * huber1) + (self.beta * comp2_mse) \
+        #           + (self.lam * huber2) # + (self.gamma * perc_mse)
+        # full_loss  = basic_mse + comp1_mse + comp2_mse
+        full_loss = basic_mse
         
         return full_loss
 

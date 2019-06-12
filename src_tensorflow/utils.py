@@ -26,7 +26,7 @@ def _fskey(f):
     return vname, fid
 
 
-def load_fnames(fdir, NFRAMES=3):
+def load_fnames(fdir, NFRAMES=2):
     """
     Load all frame names from every video directory.
     Group frames by NFRAMES param.
@@ -73,7 +73,7 @@ def load_image(fpath):
     return image
 
 
-def make_patches(image, NFRAMES=3, KERNEL=96, STRIDE=14):
+def make_patches(image, NFRAMES=2, KERNEL=96, STRIDE=14):
     """
     Extract patches from a grouped Tensor (NFRAMES, HEIGHT, WIDTH, CHANNELS).
     ==> Reshape patches to Tensor (NFRAMES, NUM_PATCHES, KERNEL, KERNEL, CHANNELS).
@@ -110,15 +110,16 @@ def make_xy(patches, DOWNK=32):
     :param patches: Original high-res image.
     :return: Downsampled image. Kernel is default (BiLinear??)
     """
-    downed = tf.image.resize(patches, [DOWNK, DOWNK])
+    # downed = tf.image.resize(patches, [DOWNK, DOWNK])
 
     # paddings = tf.constant([[0, 0], [1, 1], [1, 1], [0, 0]])
     # downed = tf.pad(downed, paddings=paddings)
     # `tf.pad` not required if you keep "SAME" padding during conv2d ops.
-    return downed, patches[0] # Error against single HiRes frames only.
+    # return downed, patches[0] # Error against single HiRes frames only.
+    return patches, patches[0]
 
 
-def build_dataset(batched_fnames, NFRAMES=3, BATCHSIZE=64,
+def build_dataset(batched_fnames, NFRAMES=2, BATCHSIZE=64,
                   KERNEL=96, STRIDE=14, DOWNK=32):
     """
     Build tf.data.Dataset from grouped frame paths.
@@ -143,7 +144,7 @@ def build_dataset(batched_fnames, NFRAMES=3, BATCHSIZE=64,
     dataset = dataset.window(size=NFRAMES, drop_remainder=True)  # Window consecutive frames.
     dataset = dataset.flat_map(lambda dset: dset.batch(NFRAMES))  # Group the frames | Loaded frames are paired again.
 
-    dataset = dataset.map(lambda x: make_patches(x, STRIDE=STRIDE))
+    dataset = dataset.map(lambda x: make_patches(x, STRIDE=STRIDE, NFRAMES=2))
         # make_patches)  # Generate patches for paired frames AND swap axes : [patches, NFRAMES, k, k, c]
 
     dataset = dataset.flat_map(tf.data.Dataset.from_tensor_slices)  # Flatten | single tensors of [NFRAMES, k, k, c]
@@ -164,6 +165,6 @@ if __name__ == '__main__':
     print "Executing Eagerly?", tf.executing_eagerly()
 
     dirpath = sys.argv[1]
-    fnames = load_fnames(dirpath)
+    fnames = load_fnames(dirpath, NFRAMES=2)
     for x, y in build_dataset(fnames[:3]):
         print x.shape, y.shape
